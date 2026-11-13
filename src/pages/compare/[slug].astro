@@ -1,0 +1,218 @@
+---
+import models from '../../data/models.json';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const pairs: { params: { slug: string }, props: { modelA: any, modelB: any } }[] = [];
+  for (let i = 0; i < models.length; i++) {
+    for (let j = i + 1; j < models.length; j++) {
+      pairs.push({
+        params: { slug: `${models[i].id}-vs-${models[j].id}` },
+        props: { modelA: models[i], modelB: models[j] }
+      });
+    }
+  }
+  return pairs;
+}
+
+const { modelA, modelB } = Astro.props;
+
+function formatCtx(n: number): string {
+  return n >= 1000000 ? (n / 1000000).toFixed(1) + 'M' : (n / 1000) + 'K';
+}
+
+const inputDiffText = modelA.inputPricePer1M === modelB.inputPricePer1M
+  ? 'same price'
+  : `${modelA.inputPricePer1M < modelB.inputPricePer1M ? modelA.name : modelB.name} is ${Math.round(Math.abs(modelA.inputPricePer1M - modelB.inputPricePer1M) / Math.max(modelA.inputPricePer1M, modelB.inputPricePer1M) * 100)}% cheaper`;
+
+const rows = [
+  {
+    param: 'Input Price',
+    aDisplay: '$' + modelA.inputPricePer1M.toFixed(3) + '/M',
+    bDisplay: '$' + modelB.inputPricePer1M.toFixed(3) + '/M',
+    aWins: modelA.inputPricePer1M <= modelB.inputPricePer1M,
+    note: 'Lower is better'
+  },
+  {
+    param: 'Output Price',
+    aDisplay: '$' + modelA.outputPricePer1M.toFixed(2) + '/M',
+    bDisplay: '$' + modelB.outputPricePer1M.toFixed(2) + '/M',
+    aWins: modelA.outputPricePer1M <= modelB.outputPricePer1M,
+    note: 'Lower is better'
+  },
+  {
+    param: 'Context Window',
+    aDisplay: formatCtx(modelA.contextWindow) + ' tokens',
+    bDisplay: formatCtx(modelB.contextWindow) + ' tokens',
+    aWins: modelA.contextWindow >= modelB.contextWindow,
+    note: 'Higher is better'
+  },
+  {
+    param: 'Speed',
+    aDisplay: modelA.tokensPerSecond + ' tok/s',
+    bDisplay: modelB.tokensPerSecond + ' tok/s',
+    aWins: modelA.tokensPerSecond >= modelB.tokensPerSecond,
+    note: 'Higher is better'
+  },
+  {
+    param: 'Latency',
+    aDisplay: modelA.latencyMs + ' ms',
+    bDisplay: modelB.latencyMs + ' ms',
+    aWins: modelA.latencyMs <= modelB.latencyMs,
+    note: 'Lower is better'
+  }
+];
+---
+
+<Layout
+  title={`${modelA.name} vs ${modelB.name} — API Cost & Performance Comparison 2026`}
+  description={`${modelA.name} vs ${modelB.name}: input pricing $${modelA.inputPricePer1M} vs $${modelB.inputPricePer1M} per 1M tokens. ${inputDiffText} on input. Full side-by-side comparison.`}
+  canonical={`https://aicost.apexcraftweb.com/compare/${modelA.id}-vs-${modelB.id}`}
+>
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <nav class="text-sm text-slate-500 mb-8">
+      <a href="/" class="hover:text-purple-600">AI Cost Matrix</a>
+      <span class="mx-2">›</span>
+      <span>{modelA.name} vs {modelB.name}</span>
+    </nav>
+
+    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">
+      {modelA.name} vs {modelB.name}
+    </h1>
+    <p class="text-slate-500 text-lg mb-10">Side-by-side API cost and performance comparison — November 2026</p>
+
+    <!-- Side-by-side pricing cards -->
+    <div class="grid md:grid-cols-2 gap-6 mb-12">
+      <div class="rounded-2xl border-2 p-6 border-purple-300 bg-purple-50">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="font-bold text-xl text-slate-900">{modelA.name}</div>
+            <div class="text-slate-500 text-sm">{modelA.provider}</div>
+          </div>
+          {modelA.openSource && <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Open Source</span>}
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Input / 1M tokens</span><span class="font-semibold text-slate-900 font-mono">${modelA.inputPricePer1M.toFixed(3)}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Output / 1M tokens</span><span class="font-semibold text-slate-900 font-mono">${modelA.outputPricePer1M.toFixed(2)}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Cached input / 1M</span><span class="font-semibold text-slate-900 font-mono">{modelA.cachedInputPricePer1M != null ? '$' + modelA.cachedInputPricePer1M.toFixed(4) : '—'}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Context window</span><span class="font-semibold text-slate-900 font-mono">{formatCtx(modelA.contextWindow)} tokens</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Speed</span><span class="font-semibold text-slate-900 font-mono">{modelA.tokensPerSecond} tok/s</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Latency</span><span class="font-semibold text-slate-900 font-mono">{modelA.latencyMs} ms</span></div>
+        </div>
+        <a href={`/model/${modelA.id}`} class="mt-5 block text-center text-sm text-purple-600 hover:text-purple-800 font-medium">Full {modelA.name} Details →</a>
+      </div>
+
+      <div class="rounded-2xl border-2 p-6 border-slate-200 bg-slate-50">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="font-bold text-xl text-slate-900">{modelB.name}</div>
+            <div class="text-slate-500 text-sm">{modelB.provider}</div>
+          </div>
+          {modelB.openSource && <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Open Source</span>}
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Input / 1M tokens</span><span class="font-semibold text-slate-900 font-mono">${modelB.inputPricePer1M.toFixed(3)}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Output / 1M tokens</span><span class="font-semibold text-slate-900 font-mono">${modelB.outputPricePer1M.toFixed(2)}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Cached input / 1M</span><span class="font-semibold text-slate-900 font-mono">{modelB.cachedInputPricePer1M != null ? '$' + modelB.cachedInputPricePer1M.toFixed(4) : '—'}</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Context window</span><span class="font-semibold text-slate-900 font-mono">{formatCtx(modelB.contextWindow)} tokens</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Speed</span><span class="font-semibold text-slate-900 font-mono">{modelB.tokensPerSecond} tok/s</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Latency</span><span class="font-semibold text-slate-900 font-mono">{modelB.latencyMs} ms</span></div>
+        </div>
+        <a href={`/model/${modelB.id}`} class="mt-5 block text-center text-sm text-purple-600 hover:text-purple-800 font-medium">Full {modelB.name} Details →</a>
+      </div>
+    </div>
+
+    <!-- Parameter-by-parameter verdict -->
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-12">
+      <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+        <h2 class="font-bold text-slate-900">Head-to-Head Verdict</h2>
+      </div>
+      <div class="divide-y divide-slate-100">
+        {rows.map(row => (
+          <div class="grid grid-cols-7 items-center px-6 py-4 text-sm">
+            <div class="col-span-2 text-slate-500 font-medium">{row.param} <span class="text-xs text-slate-400 block">{row.note}</span></div>
+            <div class={`col-span-2 text-center font-mono font-semibold ${row.aWins ? 'text-purple-700' : 'text-slate-600'}`}>
+              {row.aDisplay}
+              {row.aWins && <span class="ml-1 text-purple-600">✓</span>}
+            </div>
+            <div class="col-span-1 text-center text-xs text-slate-400">vs</div>
+            <div class={`col-span-2 text-center font-mono font-semibold ${!row.aWins ? 'text-purple-700' : 'text-slate-600'}`}>
+              {row.bDisplay}
+              {!row.aWins && <span class="ml-1 text-purple-600">✓</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Interactive cost comparison -->
+    <div class="bg-gradient-to-br from-slate-900 to-purple-950 rounded-2xl p-8 text-white mb-12">
+      <h2 class="text-xl font-bold mb-6">Your Cost at Scale</h2>
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <label class="text-xs text-slate-400 mb-2 block">Monthly Input Tokens</label>
+          <input id="cmpInput" type="number" value="1000000"
+            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-purple-400">
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 mb-2 block">Monthly Output Tokens</label>
+          <input id="cmpOutput" type="number" value="500000"
+            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-purple-400">
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white/10 rounded-xl p-5">
+          <div class="text-slate-400 text-sm mb-1">{modelA.name}</div>
+          <div id="cmpResultA" class="text-3xl font-bold">$0.00</div>
+          <div id="cmpBreakdownA" class="text-xs text-slate-400 mt-1"></div>
+        </div>
+        <div class="bg-white/10 rounded-xl p-5">
+          <div class="text-slate-400 text-sm mb-1">{modelB.name}</div>
+          <div id="cmpResultB" class="text-3xl font-bold">$0.00</div>
+          <div id="cmpBreakdownB" class="text-xs text-slate-400 mt-1"></div>
+        </div>
+      </div>
+      <div id="cmpSavings" class="text-center mt-4 text-green-400 font-semibold"></div>
+    </div>
+
+    <!-- Back + CTA -->
+    <div class="flex gap-4 flex-wrap">
+      <a href="/" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-6 rounded-xl transition-all">← All Models</a>
+      <a href="https://apexcraftweb.gumroad.com/l/aicost-handbook" target="_blank" rel="noopener sponsored"
+         class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all">
+        💎 AI Cost Optimization Handbook — $14.99
+      </a>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ modelA, modelB }}>
+  function fmt(c) {
+    if (c < 0.01) return '<$0.01';
+    if (c < 1) return '$' + c.toFixed(3);
+    if (c < 10) return '$' + c.toFixed(2);
+    return '$' + c.toFixed(1);
+  }
+  function calc() {
+    const inp = parseInt(document.getElementById('cmpInput').value) || 0;
+    const out = parseInt(document.getElementById('cmpOutput').value) || 0;
+    const ca = (inp / 1e6) * modelA.inputPricePer1M + (out / 1e6) * modelA.outputPricePer1M;
+    const cb = (inp / 1e6) * modelB.inputPricePer1M + (out / 1e6) * modelB.outputPricePer1M;
+    document.getElementById('cmpResultA').textContent = fmt(ca);
+    document.getElementById('cmpResultB').textContent = fmt(cb);
+    document.getElementById('cmpBreakdownA').textContent = `Input: $${((inp/1e6)*modelA.inputPricePer1M).toFixed(3)} · Output: $${((out/1e6)*modelA.outputPricePer1M).toFixed(3)}`;
+    document.getElementById('cmpBreakdownB').textContent = `Input: $${((inp/1e6)*modelB.inputPricePer1M).toFixed(3)} · Output: $${((out/1e6)*modelB.outputPricePer1M).toFixed(3)}`;
+    if (ca !== cb) {
+      const cheaper = ca < cb ? modelA.name : modelB.name;
+      const savings = Math.abs(ca - cb);
+      const pct = Math.round(savings / Math.max(ca, cb) * 100);
+      const annual = savings * 12;
+      document.getElementById('cmpSavings').textContent = `${cheaper} saves you ${fmt(savings)}/month (${pct}%) = ${fmt(annual)}/year`;
+    } else {
+      document.getElementById('cmpSavings').textContent = 'Same cost for this workload';
+    }
+  }
+  document.getElementById('cmpInput').addEventListener('input', calc);
+  document.getElementById('cmpOutput').addEventListener('input', calc);
+  calc();
+</script>

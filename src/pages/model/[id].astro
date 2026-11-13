@@ -1,0 +1,171 @@
+---
+import models from '../../data/models.json';
+
+export async function getStaticPaths() {
+  return models.map(m => ({ params: { id: m.id }, props: { model: m, allModels: models } }));
+}
+
+const { model, allModels } = Astro.props;
+import Layout from '../../layouts/Layout.astro';
+
+// Find 3 comparable models (same category or similar price)
+const similar = allModels
+  .filter(m => m.id !== model.id)
+  .sort((a, b) => Math.abs(a.inputPricePer1M - model.inputPricePer1M) - Math.abs(b.inputPricePer1M - model.inputPricePer1M))
+  .slice(0, 3);
+
+const formatCtx = (n: number) => n >= 1000000 ? (n / 1000000).toFixed(1) + 'M tokens' : (n / 1000) + 'K tokens';
+---
+
+<Layout
+  title={`${model.name} API Pricing & Cost Calculator — ${model.provider} LLM 2026`}
+  description={`${model.name} costs $${model.inputPricePer1M}/M input, $${model.outputPricePer1M}/M output tokens. ${model.notes} Compare with alternatives.`}
+  canonical={`https://aicost.apexcraftweb.com/model/${model.id}`}
+>
+  <!-- Breadcrumb -->
+  <div class="max-w-5xl mx-auto px-4 pt-8 pb-2">
+    <nav class="text-sm text-slate-500" aria-label="breadcrumb">
+      <a href="/" class="hover:text-purple-600">AI Cost Matrix</a>
+      <span class="mx-2">›</span>
+      <span class="text-slate-800">{model.name}</span>
+    </nav>
+  </div>
+
+  <!-- Hero -->
+  <section class="max-w-5xl mx-auto px-4 py-10">
+    <div class="flex flex-col md:flex-row gap-8">
+      <!-- Left: Model info -->
+      <div class="flex-1">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">{model.provider}</span>
+          <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm">{model.category}</span>
+          {model.openSource && <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">Open Source</span>}
+        </div>
+        <h1 class="text-4xl font-bold text-slate-900 mb-3">{model.name}</h1>
+        <p class="text-slate-600 text-lg mb-6">{model.notes}</p>
+
+        <!-- Price cards -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs text-slate-500 mb-1">Input (per 1M tokens)</div>
+            <div class="text-2xl font-bold text-slate-900">${model.inputPricePer1M}</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs text-slate-500 mb-1">Output (per 1M tokens)</div>
+            <div class="text-2xl font-bold text-slate-900">${model.outputPricePer1M}</div>
+          </div>
+          {model.cachedInputPricePer1M != null && (
+            <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+              <div class="text-xs text-green-600 mb-1">Cached Input (/1M)</div>
+              <div class="text-2xl font-bold text-green-700">${model.cachedInputPricePer1M}</div>
+              <div class="text-xs text-green-600">{Math.round((1 - model.cachedInputPricePer1M / model.inputPricePer1M) * 100)}% savings</div>
+            </div>
+          )}
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs text-slate-500 mb-1">Context Window</div>
+            <div class="text-2xl font-bold text-slate-900">{formatCtx(model.contextWindow)}</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs text-slate-500 mb-1">Speed</div>
+            <div class="text-2xl font-bold text-slate-900">{model.tokensPerSecond} <span class="text-sm font-normal text-slate-500">tok/s</span></div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs text-slate-500 mb-1">Latency (TTFT)</div>
+            <div class="text-2xl font-bold text-slate-900">{model.latencyMs} <span class="text-sm font-normal text-slate-500">ms</span></div>
+          </div>
+        </div>
+
+        <!-- Strengths -->
+        <div class="mb-6">
+          <div class="text-sm font-semibold text-slate-700 mb-2">Best For</div>
+          <div class="flex flex-wrap gap-2">
+            {model.strengths.map((s: string) => (
+              <span class="bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full text-sm">{s.replace(/-/g, ' ')}</span>
+            ))}
+          </div>
+        </div>
+
+        <!-- Use cases -->
+        <div class="mb-8">
+          <div class="text-sm font-semibold text-slate-700 mb-2">Common Use Cases</div>
+          <div class="flex flex-wrap gap-2">
+            {model.useCases.map((u: string) => (
+              <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm">{u.replace(/-/g, ' ')}</span>
+            ))}
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <a href={model.docsUrl} target="_blank" rel="noopener"
+             class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all">
+            View Official Docs ↗
+          </a>
+          <a href="/"
+             class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-6 rounded-xl transition-all">
+            ← Compare All Models
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Mini calculator -->
+      <div class="w-full md:w-80">
+        <div class="bg-gradient-to-br from-slate-900 to-purple-950 rounded-2xl p-6 text-white sticky top-6">
+          <h2 class="font-bold text-lg mb-4">Cost Calculator</h2>
+          <div class="space-y-4 mb-5">
+            <div>
+              <label class="text-xs text-slate-400 mb-1 block">Input Tokens / month</label>
+              <input id="calcInput" type="number" value="1000000"
+                class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-purple-400">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 mb-1 block">Output Tokens / month</label>
+              <input id="calcOutput" type="number" value="500000"
+                class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-purple-400">
+            </div>
+          </div>
+          <div class="bg-white/10 rounded-xl p-4 mb-4">
+            <div class="text-xs text-slate-400 mb-1">Estimated Monthly Cost</div>
+            <div id="calcResult" class="text-3xl font-bold text-white">$0.00</div>
+            <div class="text-xs text-slate-400 mt-1" id="calcBreakdown"></div>
+          </div>
+          <a href="https://apexcraftweb.gumroad.com/l/aicost-handbook" target="_blank" rel="noopener sponsored"
+             class="block w-full text-center bg-purple-500 hover:bg-purple-400 text-white font-semibold py-3 rounded-xl transition-all text-sm">
+            💎 Cut This Bill in Half — $14.99
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Similar models -->
+  <section class="max-w-5xl mx-auto px-4 pb-16">
+    <h2 class="text-xl font-bold text-slate-900 mb-6">Compare With Similar Models</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      {similar.map(m => (
+        <a href={`/model/${m.id}`} class="bg-white border border-slate-200 rounded-xl p-5 hover:border-purple-300 hover:shadow-md transition-all group">
+          <div class="font-bold text-slate-900 group-hover:text-purple-700 mb-1">{m.name}</div>
+          <div class="text-sm text-slate-500 mb-3">{m.provider}</div>
+          <div class="flex justify-between text-sm">
+            <div><span class="text-slate-500">Input:</span> <span class="font-mono font-semibold">${m.inputPricePer1M}/M</span></div>
+            <div><span class="text-slate-500">Output:</span> <span class="font-mono font-semibold">${m.outputPricePer1M}/M</span></div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ model }}>
+  function calc() {
+    const inp = parseInt(document.getElementById('calcInput').value) || 0;
+    const out = parseInt(document.getElementById('calcOutput').value) || 0;
+    const cost = (inp / 1e6) * model.inputPricePer1M + (out / 1e6) * model.outputPricePer1M;
+    const inpCost = (inp / 1e6) * model.inputPricePer1M;
+    const outCost = (out / 1e6) * model.outputPricePer1M;
+    document.getElementById('calcResult').textContent = cost < 0.01 ? '<$0.01' : '$' + (cost < 10 ? cost.toFixed(3) : cost.toFixed(2));
+    document.getElementById('calcBreakdown').textContent = `Input: $${inpCost.toFixed(3)} · Output: $${outCost.toFixed(3)}`;
+  }
+  document.getElementById('calcInput').addEventListener('input', calc);
+  document.getElementById('calcOutput').addEventListener('input', calc);
+  calc();
+</script>

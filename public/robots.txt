@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://aicost.apexcraftweb.com/sitemap-index.xml

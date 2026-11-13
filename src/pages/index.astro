@@ -1,0 +1,375 @@
+---
+import Layout from '../layouts/Layout.astro';
+import models from '../data/models.json';
+
+const providers = [...new Set(models.map(m => m.provider))].sort();
+const categories = [...new Set(models.map(m => m.category))].sort();
+---
+
+<Layout
+  title="AI API Cost Calculator 2026 — Compare 15 LLM Pricing Plans Instantly"
+  description="Real-time AI API cost calculator. Compare OpenAI GPT-4o, Claude, Gemini, DeepSeek, Groq prices per million tokens. Find the cheapest LLM for your workload."
+  canonical="https://aicost.apexcraftweb.com"
+>
+  <!-- Hero + Interactive Calculator -->
+  <section class="bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white py-16 px-4">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 rounded-full px-4 py-1.5 text-sm text-purple-300 mb-6">
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+        Updated November 2026 · 15 models · 8 providers
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+        AI API Cost Calculator<br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Stop Overpaying for LLM APIs</span>
+      </h1>
+      <p class="text-slate-300 text-lg mb-10 max-w-2xl mx-auto">
+        Input your token volume and instantly see which model costs least. Real prices for OpenAI, Claude, Gemini, DeepSeek, Groq — with hidden fees exposed.
+      </p>
+
+      <!-- Interactive Cost Calculator -->
+      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 text-left max-w-3xl mx-auto">
+        <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+          <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          Your Monthly Cost Estimator
+        </h2>
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label class="block text-sm text-slate-400 mb-2">Monthly Input Tokens</label>
+            <div class="relative">
+              <input id="inputTokens" type="number" value="1000000" min="0" step="100000"
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg font-mono focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">tokens</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">≈ <span id="inputPages">700</span> pages of text</p>
+          </div>
+          <div>
+            <label class="block text-sm text-slate-400 mb-2">Monthly Output Tokens</label>
+            <div class="relative">
+              <input id="outputTokens" type="number" value="500000" min="0" step="100000"
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white text-lg font-mono focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500">
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">tokens</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">≈ <span id="outputPages">350</span> pages of text</p>
+          </div>
+        </div>
+
+        <!-- Use case tags -->
+        <div class="mb-6">
+          <label class="block text-sm text-slate-400 mb-3">Use Case (optional — adjusts ratio)</label>
+          <div class="flex flex-wrap gap-2" id="useCaseTags">
+            <button class="use-case-tag active bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium transition-all" data-input="1000000" data-output="500000">Chatbot (2:1)</button>
+            <button class="use-case-tag bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-full text-sm font-medium transition-all" data-input="2000000" data-output="200000">Summarization (10:1)</button>
+            <button class="use-case-tag bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-full text-sm font-medium transition-all" data-input="500000" data-output="1500000">Code Generation (1:3)</button>
+            <button class="use-case-tag bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-full text-sm font-medium transition-all" data-input="5000000" data-output="500000">RAG Pipeline (10:1)</button>
+            <button class="use-case-tag bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-full text-sm font-medium transition-all" data-input="300000" data-output="300000">Translation (1:1)</button>
+          </div>
+        </div>
+
+        <!-- Top 3 results -->
+        <div class="border-t border-white/10 pt-6">
+          <p class="text-sm text-slate-400 mb-4">🏆 Cheapest models for your workload:</p>
+          <div id="topResults" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Full Model Comparison Table -->
+  <section class="max-w-7xl mx-auto px-4 py-16">
+    <div class="flex flex-col md:flex-row gap-4 justify-between items-start mb-8">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">All 15 LLM APIs Compared</h2>
+        <p class="text-slate-500 mt-1">Sorted by monthly cost for your inputs above</p>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <select id="filterProvider" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          <option value="">All Providers</option>
+          {providers.map(p => <option value={p}>{p}</option>)}
+        </select>
+        <select id="filterCategory" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+          <option value="">All Categories</option>
+          {categories.map(c => <option value={c}>{c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ')}</option>)}
+        </select>
+        <label class="flex items-center gap-2 text-sm text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 cursor-pointer">
+          <input type="checkbox" id="filterOpenSource" class="rounded">
+          Open-source only
+        </label>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+      <table class="w-full text-sm" id="modelTable">
+        <thead class="bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th class="text-left px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:text-purple-600" data-col="name">Model <span class="text-slate-400">↕</span></th>
+            <th class="text-left px-4 py-3 font-semibold text-slate-700">Provider</th>
+            <th class="text-right px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:text-purple-600" data-col="input">Input $/1M <span class="text-slate-400">↕</span></th>
+            <th class="text-right px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:text-purple-600" data-col="output">Output $/1M <span class="text-slate-400">↕</span></th>
+            <th class="text-right px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:text-purple-600" data-col="cached">Cached $/1M <span class="text-slate-400">↕</span></th>
+            <th class="text-right px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:text-purple-600" data-col="monthlyCost">Your Cost/mo <span class="text-slate-400">↕</span></th>
+            <th class="text-right px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:text-purple-600" data-col="speed">Speed (tok/s) <span class="text-slate-400">↕</span></th>
+            <th class="text-center px-4 py-3 font-semibold text-slate-700">Context</th>
+            <th class="text-center px-4 py-3 font-semibold text-slate-700">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody" class="divide-y divide-slate-100">
+          <!-- Rendered by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Notes -->
+    <p class="text-xs text-slate-400 mt-4">* Prices are list prices from official documentation as of November 2026. Actual costs may vary with volume discounts. Cached input prices apply when using prompt caching features.</p>
+  </section>
+
+  <!-- FAQ for GEO -->
+  <section class="max-w-4xl mx-auto px-4 pb-16">
+    <h2 class="text-2xl font-bold text-slate-900 mb-8">Frequently Asked Questions</h2>
+    <div class="space-y-6" itemscope itemtype="https://schema.org/FAQPage">
+      {[
+        {
+          q: "Which AI API is cheapest for a chatbot with 1M tokens/month?",
+          a: "For a typical chatbot with 1M input + 500K output tokens/month, Groq's Llama 3.1 8B costs approximately $0.09/month, making it the cheapest option. DeepSeek V3 costs about $0.82/month. GPT-4o mini runs approximately $0.45/month. For production chatbots, Groq is 90%+ cheaper than OpenAI GPT-4o."
+        },
+        {
+          q: "What is prompt caching and how much does it save?",
+          a: "Prompt caching stores repeated prompt prefixes (like system prompts or document context) server-side. When a cached prefix is reused, you pay the lower cached input rate instead of the full input rate. OpenAI charges $1.25/M for cached vs $2.50/M for fresh input (50% savings). Anthropic offers $0.30/M cached vs $3.00/M fresh (90% savings). For RAG pipelines with consistent system prompts, caching can reduce input costs by 50-90%."
+        },
+        {
+          q: "Is DeepSeek API as reliable as OpenAI for production use?",
+          a: "DeepSeek's direct API has experienced outages during peak demand, particularly in January 2025 after viral attention. For production use, accessing DeepSeek V3 through OpenRouter or Together.AI provides higher reliability with SLAs. At 90% lower cost than GPT-4o with comparable quality for coding and reasoning tasks, the tradeoff is favorable when routing through a managed provider."
+        },
+        {
+          q: "How much does GPT-4o cost per message?",
+          a: "A typical ChatGPT-style exchange (200 tokens input + 300 tokens output) costs approximately $0.0008 using GPT-4o at standard pricing ($2.50/M input, $10/M output). At 10,000 messages/month, that's $8/month. Using GPT-4o mini ($0.15/M input, $0.60/M output) drops this to $0.048/month — 94% cheaper."
+        },
+        {
+          q: "Which LLM API is fastest for real-time voice AI applications?",
+          a: "Groq is the clear winner for latency-sensitive applications like voice AI. Groq's LPU hardware achieves 850-1,200 tokens/second versus 50-120 tok/s on standard GPU inference. This sub-100ms time-to-first-token is essential for real-time voice response. Groq's Llama 3.3 70B ($0.59/M input) or Llama 3.1 8B ($0.05/M input) are the go-to choices for voice AI pipelines."
+        },
+        {
+          q: "What is the difference between batch API pricing and standard pricing?",
+          a: "Batch API pricing applies when requests are submitted asynchronously as a batch job (not real-time). OpenAI Batch API charges 50% of standard pricing with 24-hour completion windows. Anthropic Message Batches API offers 50% off. This is ideal for offline tasks like document classification, content moderation queues, or bulk data extraction — where real-time response is not needed."
+        }
+      ].map(item => (
+        <div class="bg-slate-50 rounded-xl p-6" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+          <h3 class="font-semibold text-slate-900 mb-3" itemprop="name">{item.q}</h3>
+          <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+            <p class="text-slate-600 leading-relaxed" itemprop="text">{item.a}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Pro Kit CTA -->
+  <section class="bg-gradient-to-br from-purple-900 to-slate-900 text-white py-16 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="text-4xl mb-4">🚀</div>
+      <h2 class="text-3xl font-bold mb-4">Cut Your AI API Bill in Half</h2>
+      <p class="text-slate-300 text-lg mb-8">
+        Get the <strong>AI API Cost Optimization Handbook</strong> — a 40-page guide with proven architectures that reduce LLM costs by 40-80%: prompt caching strategies, model routing logic, batching patterns, and open-source swap playbooks.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="https://apexcraftweb.gumroad.com/l/aicost-handbook"
+           target="_blank" rel="noopener sponsored"
+           class="inline-flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-400 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all shadow-lg shadow-purple-900/50">
+          💎 Get Pro Handbook — $14.99
+        </a>
+        <a href="/calculator"
+           class="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-8 rounded-xl text-lg transition-all border border-white/20">
+          Try Full Calculator →
+        </a>
+      </div>
+      <p class="text-slate-500 text-sm mt-4">Instant PDF delivery · 30-day money-back guarantee</p>
+    </div>
+  </section>
+
+  <!-- Cross-link to other matrices -->
+  <section class="max-w-5xl mx-auto px-4 py-16">
+    <h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">More Cost Intelligence Tools</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      {[
+        { title: "Cloud Stack Cost Matrix", desc: "Compare AWS vs GCP vs Azure for 130 architecture patterns. Find hidden costs.", href: "https://stackcost.apexcraftweb.com", emoji: "☁️" },
+        { title: "Remote Salary Matrix", desc: "Global developer salaries in 25 countries. Legal hiring playbooks.", href: "https://salary.apexcraftweb.com", emoji: "💼" },
+        { title: "Nomad Visa Matrix", desc: "1,133 pages on digital nomad visas, taxes, and cost of living worldwide.", href: "https://nomad.apexcraftweb.com", emoji: "🌍" }
+      ].map(item => (
+        <a href={item.href} target="_blank" rel="noopener"
+           class="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md hover:border-purple-200 transition-all group">
+          <div class="text-3xl mb-3">{item.emoji}</div>
+          <h3 class="font-bold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">{item.title}</h3>
+          <p class="text-slate-500 text-sm">{item.desc}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ models }}>
+  // Calculator state
+  let inputTokens = 1000000;
+  let outputTokens = 500000;
+  let sortCol = 'monthlyCost';
+  let sortAsc = true;
+  let filterProvider = '';
+  let filterCategory = '';
+  let filterOpenSource = false;
+
+  function computeCost(model, inp, out) {
+    return (inp / 1e6) * model.inputPricePer1M + (out / 1e6) * model.outputPricePer1M;
+  }
+
+  function formatCost(c) {
+    if (c < 0.01) return '<$0.01';
+    if (c < 1) return '$' + c.toFixed(3);
+    if (c < 10) return '$' + c.toFixed(2);
+    return '$' + c.toFixed(1);
+  }
+
+  function formatCtx(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    return (n / 1000) + 'K';
+  }
+
+  const categoryColors = {
+    'flagship': 'bg-blue-100 text-blue-700',
+    'efficient': 'bg-green-100 text-green-700',
+    'reasoning': 'bg-orange-100 text-orange-700',
+    'open-weight': 'bg-purple-100 text-purple-700',
+    'enterprise': 'bg-indigo-100 text-indigo-700',
+  };
+
+  const providerColors = {
+    'OpenAI': 'bg-emerald-50 border-emerald-200',
+    'Anthropic': 'bg-orange-50 border-orange-200',
+    'Google': 'bg-blue-50 border-blue-200',
+    'DeepSeek': 'bg-cyan-50 border-cyan-200',
+    'Groq': 'bg-purple-50 border-purple-200',
+    'Mistral': 'bg-indigo-50 border-indigo-200',
+    'xAI': 'bg-slate-50 border-slate-200',
+    'Cohere': 'bg-teal-50 border-teal-200',
+    'Amazon': 'bg-yellow-50 border-yellow-200',
+  };
+
+  function render() {
+    // filter
+    let list = models.filter(m => {
+      if (filterProvider && m.provider !== filterProvider) return false;
+      if (filterCategory && m.category !== filterCategory) return false;
+      if (filterOpenSource && !m.openSource) return false;
+      return true;
+    });
+
+    // compute costs
+    list = list.map(m => ({ ...m, monthlyCost: computeCost(m, inputTokens, outputTokens) }));
+
+    // sort
+    list.sort((a, b) => {
+      let va = a[sortCol] ?? (sortAsc ? Infinity : -Infinity);
+      let vb = b[sortCol] ?? (sortAsc ? Infinity : -Infinity);
+      if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+      return sortAsc ? va - vb : vb - va;
+    });
+
+    // render table
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = list.map((m, i) => {
+      const cost = m.monthlyCost;
+      const isLeast = i === 0;
+      const rowClass = isLeast ? 'bg-green-50/50' : 'hover:bg-slate-50';
+      const catColor = categoryColors[m.category] || 'bg-slate-100 text-slate-600';
+      return `<tr class="${rowClass} transition-colors">
+        <td class="px-4 py-3">
+          <div class="font-semibold text-slate-900">${m.name} ${m.openSource ? '<span class="text-xs text-green-600 font-normal ml-1">OSS</span>' : ''}</div>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium ${catColor}">${m.category}</span>
+          ${isLeast ? '<span class="ml-1 text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">🏆 Cheapest</span>' : ''}
+        </td>
+        <td class="px-4 py-3 text-slate-600">${m.provider}</td>
+        <td class="px-4 py-3 text-right font-mono text-slate-800">$${m.inputPricePer1M.toFixed(3)}</td>
+        <td class="px-4 py-3 text-right font-mono text-slate-800">$${m.outputPricePer1M.toFixed(2)}</td>
+        <td class="px-4 py-3 text-right font-mono text-slate-500 text-xs">${m.cachedInputPricePer1M != null ? '$' + m.cachedInputPricePer1M.toFixed(4) : '—'}</td>
+        <td class="px-4 py-3 text-right">
+          <span class="font-bold text-slate-900 text-base">${formatCost(cost)}</span>
+          <span class="text-xs text-slate-400 block">/month</span>
+        </td>
+        <td class="px-4 py-3 text-right font-mono text-slate-700">${m.tokensPerSecond}</td>
+        <td class="px-4 py-3 text-center text-slate-600 text-xs">${formatCtx(m.contextWindow)}</td>
+        <td class="px-4 py-3 text-center">
+          <a href="/model/${m.id}" class="text-purple-600 hover:text-purple-800 text-xs font-medium underline underline-offset-2 mr-2">Details</a>
+          <a href="${m.docsUrl}" target="_blank" rel="noopener" class="text-slate-400 hover:text-slate-600 text-xs">Docs ↗</a>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // top 3 results
+    const sortedByCost = [...list].sort((a, b) => a.monthlyCost - b.monthlyCost).slice(0, 3);
+    const topEl = document.getElementById('topResults');
+    topEl.innerHTML = sortedByCost.map((m, i) => {
+      const medals = ['🥇', '🥈', '🥉'];
+      const savings = i > 0 ? Math.round((1 - m.monthlyCost / sortedByCost[0].monthlyCost) * 100) : null;
+      return `<div class="flex items-center justify-between bg-white/10 rounded-xl px-4 py-3">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">${medals[i]}</span>
+          <div>
+            <div class="font-semibold text-white">${m.name}</div>
+            <div class="text-xs text-slate-400">${m.provider} · ${m.tokensPerSecond} tok/s</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="font-bold text-white text-lg">${formatCost(m.monthlyCost)}/mo</div>
+          ${savings ? `<div class="text-xs text-orange-300">+${savings}% vs cheapest</div>` : '<div class="text-xs text-green-400">cheapest option</div>'}
+        </div>
+      </div>`;
+    }).join('');
+
+    // update page labels
+    document.getElementById('inputPages').textContent = Math.round(inputTokens / 1428).toLocaleString();
+    document.getElementById('outputPages').textContent = Math.round(outputTokens / 1428).toLocaleString();
+  }
+
+  // Bind inputs
+  document.getElementById('inputTokens').addEventListener('input', e => {
+    inputTokens = parseInt(e.target.value) || 0;
+    render();
+  });
+  document.getElementById('outputTokens').addEventListener('input', e => {
+    outputTokens = parseInt(e.target.value) || 0;
+    render();
+  });
+
+  // Use case presets
+  document.querySelectorAll('.use-case-tag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.use-case-tag').forEach(b => {
+        b.classList.remove('active', 'bg-purple-600', 'text-white');
+        b.classList.add('bg-slate-700', 'text-slate-300');
+      });
+      btn.classList.add('active', 'bg-purple-600', 'text-white');
+      btn.classList.remove('bg-slate-700', 'text-slate-300');
+      inputTokens = parseInt(btn.dataset.input);
+      outputTokens = parseInt(btn.dataset.output);
+      document.getElementById('inputTokens').value = inputTokens;
+      document.getElementById('outputTokens').value = outputTokens;
+      render();
+    });
+  });
+
+  // Sortable columns
+  document.querySelectorAll('[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) sortAsc = !sortAsc;
+      else { sortCol = col; sortAsc = true; }
+      render();
+    });
+  });
+
+  // Filters
+  document.getElementById('filterProvider').addEventListener('change', e => { filterProvider = e.target.value; render(); });
+  document.getElementById('filterCategory').addEventListener('change', e => { filterCategory = e.target.value; render(); });
+  document.getElementById('filterOpenSource').addEventListener('change', e => { filterOpenSource = e.target.checked; render(); });
+
+  // Initial render
+  render();
+</script>
