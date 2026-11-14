@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-11-14",
+  "effectiveDate": "Provider page does not specify an effective date; snapshot at verification only.",
+  "scope": "Direct Claude API, global routing, prompt <=100k; no Bedrock, Vertex, Foundry, fast mode or regional surcharge.",
+  "files": [
+    {
+      "path": "docs/pricing-evidence/anthropic-model-ids-20261114.md",
+      "sha256": "7ed539db42ec8fee14b7310ffb78346128fd1e4c5b133999497dc531d40c03f7"
+    },
+    {
+      "path": "docs/pricing-evidence/anthropic-pricing-20261114.md",
+      "sha256": "21a76b84664ee2791834c7810ea73d5c93ca4829a8da94ac7fc4b970e134bdfa"
+    },
+    {
+      "path": "docs/pricing-evidence/anthropic-cache-20261114.md",
+      "sha256": "2228b71dceae991294d1000a4464b9eb8a238bfb39922dda3d707373bf7c4970"
+    }
+  ]
+}

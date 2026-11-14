@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "basis": "Estimated text token fees, not a provider charge or invoice",
+  "model": "claude-sonnet-5-5",
+  "channel": "Direct Claude API",
+  "mode": "batch",
+  "geography": "global",
+  "currency": "USD",
+  "priceVerifiedAt": "2026-11-14",
+  "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "buckets": {
+    "input": 1000,
+    "output": 500,
+    "cacheRead": 2000,
+    "cacheWrite5m": 0,
+    "cacheWrite1h": 0
+  },
+  "workload": {
+    "actionsPerDay": 100,
+    "callsPerAction": 2,
+    "extraCallsPerDay": 20,
+    "days": 1
+  },
+  "result": {
+    "lines": [
+      {
+        "bucket": "input",
+        "tokens": 1000,
+        "ratePerMillion": 1,
+        "usd": 0.001
+      },
+      {
+        "bucket": "cacheRead",
+        "tokens": 2000,
+        "ratePerMillion": 0.05,
+        "usd": 0.0001
+      },
+      {
+        "bucket": "cacheWrite5m",
+        "tokens": 0,
+        "ratePerMillion": 1.25,
+        "usd": 0
+      },
+      {
+        "bucket": "cacheWrite1h",
+        "tokens": 0,
+        "ratePerMillion": 2,
+        "usd": 0
+      },
+      {
+        "bucket": "output",
+        "tokens": 500,
+        "ratePerMillion": 5,
+        "usd": 0.0025
+      }
+    ],
+    "total": 0.0036,
+    "promptTokens": 3000,
+    "dailyCalls": 220,
+    "monthlyCalls": 220,
+    "perAction": 0.0072,
+    "daily": 0.7919999999999999,
+    "period": 0.7919999999999999
+  },
+  "excluded": [
+    "Server tools",
+    "Images, audio, video",
+    "Tax, credits and private discounts",
+    "Other application infrastructure",
+    "US-only inference",
+    "Fast/priority modes"
+  ],
+  "scenarios": "0.5x / 1x / 2x volume; same token profile; not confidence intervals"
+}

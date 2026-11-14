@@ -1,0 +1,36 @@
+---
+import models from '../data/models.json';
+const { initialModel = models[0].id } = Astro.props;
+const fields = [
+ ['input','Uncached input tokens',1000], ['cacheRead','Cache read tokens',2000],
+ ['cacheWrite5m','Cache write tokens · 5 minutes',0], ['cacheWrite1h','Cache write tokens · 1 hour',0], ['output','Output tokens (including billed thinking)',500],
+ ['actionsPerDay','Business actions per day',100], ['callsPerAction','Calls per action, excluding retries',2], ['extraCallsPerDay','Extra calls per day (retries / fallbacks)',20], ['days','Days in budget period',30]
+];
+---
+<section id="calculator" class="panel" data-initial-model={initialModel}>
+ <div class="section-heading"><div><p class="eyebrow">1 · Plan a workload</p><h2>What will one feature cost?</h2></div><span class="pill">Free · no account</span></div>
+ <p>Start with a measured request or the fictional example below. Counts are per API call; extra calls use the same token profile.</p>
+ <form id="estimateForm" novalidate>
+  <div class="form-grid">
+   <label>Model<select id="model" name="model">{models.map(m=><option value={m.id} selected={m.id===initialModel}>{m.name}</option>)}</select></label>
+   <label>Billing mode<select id="mode" name="mode"><option value="standard">Standard · global</option><option value="batch">Message Batches · global (asynchronous)</option></select></label>
+   {fields.map(([id,label,value])=><label>{label}<input id={id} name={id} type="number" min={id==='days'||id==='callsPerAction'?1:0} max={id==='days'?366:1000000000000} step="1" value={value}/></label>)}
+  </div>
+  <p class="hint">Input buckets are separate: uncached input excludes all cache reads and writes. Use billed cache counts, not an assumed hit rate. Prompt total must be ≤100,000 tokens. Only text token fees are included.</p>
+  <button type="button" class="secondary" id="resetExample">Load fictional example</button>
+ </form>
+ <p id="estimateError" class="error" role="alert" hidden></p>
+ <div id="estimateOutput" aria-live="polite">
+  <div class="metrics"><div><span>Per API call</span><strong id="perCall">—</strong></div><div><span>Per action · excluding extra calls</span><strong id="perAction">—</strong></div><div><span>Per day · including extra calls</span><strong id="perDay">—</strong></div><div class="accent"><span>Budget period · token fees</span><strong id="periodCost">—</strong></div></div>
+  <p id="workloadSummary"></p>
+  <div class="table-wrap"><table><caption>Per-call cost breakdown · USD per million tokens</caption><thead><tr><th>Billing bucket</th><th>Tokens</th><th>Rate / 1M</th><th>Cost / call</th></tr></thead><tbody id="breakdown"></tbody></table></div>
+  <p id="rateSource" class="hint"></p>
+  <h3>Volume scenarios</h3><p class="hint">Illustrative 0.5× / 1× / 2× call volume, with unchanged per-call token mix. These are assumptions, not confidence intervals.</p><div id="scenarios" class="metrics"></div>
+  <details><summary>Compare these three reference models</summary><p class="hint">Same assumed token counts, not equivalent output quality. Measure each model on your own task. Lower token fees do not establish better value.</p><div id="comparison"></div></details>
+  <button id="downloadBudget" class="primary" type="button">Download budget & assumptions</button>
+ </div>
+ <noscript><p>The interactive calculator needs JavaScript. Reference prices and calculation guidance remain available below.</p></noscript>
+</section>
+<script>
+ import '../scripts/calculator';
+</script>

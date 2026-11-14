@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "basis": "Token-fee estimate at stored reference prices; not a provider-reported charge or historical invoice.",
+  "mode": "standard",
+  "rows": [
+    {
+      "row": 1,
+      "model": "claude-sonnet-5-5",
+      "priceCheckedAt": "2026-11-14",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "buckets": {
+        "input": 1000,
+        "output": 500,
+        "cacheRead": 2000,
+        "cacheWrite5m": 200,
+        "cacheWrite1h": 100
+      },
+      "lines": [
+        {
+          "bucket": "input",
+          "tokens": 1000,
+          "ratePerMillion": 2,
+          "usd": 0.002
+        },
+        {
+          "bucket": "cacheRead",
+          "tokens": 2000,
+          "ratePerMillion": 0.1,
+          "usd": 0.0002
+        },
+        {
+          "bucket": "cacheWrite5m",
+          "tokens": 200,
+          "ratePerMillion": 2.5,
+          "usd": 0.0005
+        },
+        {
+          "bucket": "cacheWrite1h",
+          "tokens": 100,
+          "ratePerMillion": 4,
+          "usd": 0.0004
+        },
+        {
+          "bucket": "output",
+          "tokens": 500,
+          "ratePerMillion": 10,
+          "usd": 0.005
+        }
+      ],
+      "usd": 0.0081
+    },
+    {
+      "row": 2,
+      "model": "claude-sonnet-5-5",
+      "priceCheckedAt": "2026-11-14",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "buckets": {
+        "input": 500,
+        "output": 100,
+        "cacheRead": 0,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 0
+      },
+      "lines": [
+        {
+          "bucket": "input",
+          "tokens": 500,
+          "ratePerMillion": 2,
+          "usd": 0.001
+        },
+        {
+          "bucket": "cacheRead",
+          "tokens": 0,
+          "ratePerMillion": 0.1,
+          "usd": 0
+        },
+        {
+          "bucket": "cacheWrite5m",
+          "tokens": 0,
+          "ratePerMillion": 2.5,
+          "usd": 0
+        },
+        {
+          "bucket": "cacheWrite1h",
+          "tokens": 0,
+          "ratePerMillion": 4,
+          "usd": 0
+        },
+        {
+          "bucket": "output",
+          "tokens": 100,
+          "ratePerMillion": 10,
+          "usd": 0.001
+        }
+      ],
+      "usd": 0.002
+    }
+  ],
+  "total": 0.0101
+}

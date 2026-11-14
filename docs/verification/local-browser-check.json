@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-14",
+  "scope": "Local production build; fictional example",
+  "mobile": {
+    "width": 390,
+    "viewport": 390,
+    "deviceWidth": 390
+  },
+  "observed": {
+    "total": "$0.0101",
+    "localStorageItems": 0,
+    "sessionStorageItems": 0
+  },
+  "events": []
+}
